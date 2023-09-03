@@ -30,6 +30,7 @@ The data is grouped in 9 nibbles
 */
 
 #include "decoder.h"
+#include "logger.h"
 
 static int prologue_callback(r_device *decoder, bitbuffer_t *bitbuffer)
 {
@@ -44,12 +45,16 @@ static int prologue_callback(r_device *decoder, bitbuffer_t *bitbuffer)
     int temp_raw;
     int humidity;
 
-    if (bitbuffer->bits_per_row[0] <= 8 && bitbuffer->bits_per_row[0] != 0)
+    if (bitbuffer->bits_per_row[0] <= 8 && bitbuffer->bits_per_row[0] != 0) {
+        // print_logf(LOG_WARNING, __func__, "sync bits = %d", bitbuffer->bits_per_row[0]);
         return DECODE_ABORT_EARLY; // Alecto/Auriol-v2 has 8 sync bits, reduce false positive
+    }
 
     int r = bitbuffer_find_repeated_row(bitbuffer, 4, 36); // only 3 repeats will give false positives for Alecto/Auriol-v2
-    if (r < 0)
+    if (r < 0) {
+        // print_logf(LOG_WARNING, __func__, "too early");
         return DECODE_ABORT_EARLY;
+    }
 
     if (bitbuffer->bits_per_row[r] > 37) // we expect 36 bits but there might be a trailing 0 bit
         return DECODE_ABORT_LENGTH;
@@ -103,6 +108,7 @@ r_device const prologue = {
         .modulation  = OOK_PULSE_PPM,
         .short_width = 2000,
         .long_width  = 4000,
+        .tolerance   = 500,
         .gap_limit   = 7000,
         .reset_limit = 10000,
         .decode_fn   = &prologue_callback,

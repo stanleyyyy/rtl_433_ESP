@@ -327,7 +327,7 @@ void rtlSetup() {
     // end of fragement
 
 #else
-    memcpy(&cfg->devices[0], &prologue, sizeof(r_device));
+    memcpy(&cfg->devices[0], &tfa_pool_thermometer, sizeof(r_device));
 #endif
 
 #ifdef RTL_FLEX
